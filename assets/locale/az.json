@@ -1,0 +1,14 @@
+{
+    "header.title": "Başlıq Komponenti",
+    "header.count": "Sayı",
+    "header.increment": "Artır",
+    "footer.greeting": "Salam, Altbilgi!",
+    "footer.change": "Mətni Dəyiş",
+    "footer.updated": "Altbilgi Yeniləndi!",
+    "home.title": "Xoş Gəlmisiniz",
+    "home.description": "Bu ana səhifədir.",
+    "about.title": "Haqqımızda",
+    "about.description": "Bu haqqımızda səhifəsidir.",
+    "contact.title": "Bizimlə Əlaqə",
+    "contact.description": "Bu əlaqə səhifəsidir."
+  }

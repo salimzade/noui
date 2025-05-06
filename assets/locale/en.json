@@ -1,0 +1,14 @@
+{
+    "header.title": "Header Component",
+    "header.count": "Count",
+    "header.increment": "Increment",
+    "footer.greeting": "Hello, Footer!",
+    "footer.change": "Change Text",
+    "footer.updated": "Footer Updated!",
+    "home.title": "Welcome to Home",
+    "home.description": "This is the home page.",
+    "about.title": "About Us",
+    "about.description": "This is the about page.",
+    "contact.title": "Contact Us",
+    "contact.description": "This is the contact page."
+  }

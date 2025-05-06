@@ -1,0 +1,14 @@
+{
+    "header.title": "Компонент Заголовка",
+    "header.count": "Счётчик",
+    "header.increment": "Увеличить",
+    "footer.greeting": "Привет, Подвал!",
+    "footer.change": "Изменить Текст",
+    "footer.updated": "Подвал Обновлён!",
+    "home.title": "Добро пожаловать",
+    "home.description": "Это главная страница.",
+    "about.title": "О нас",
+    "about.description": "Это страница о нас.",
+    "contact.title": "Связаться с нами",
+    "contact.description": "Это страница контактов."
+  }
