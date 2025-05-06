@@ -2,6 +2,7 @@
     "header.title": "Компонент Заголовка",
     "header.count": "Счётчик",
     "header.increment": "Увеличить",
+    "header.decrement": "Уменьшить",
     "footer.greeting": "Привет, Подвал!",
     "footer.change": "Изменить Текст",
     "footer.updated": "Подвал Обновлён!",

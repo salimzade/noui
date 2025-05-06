@@ -2,6 +2,7 @@
     "header.title": "Başlıq Komponenti",
     "header.count": "Sayı",
     "header.increment": "Artır",
+    "header.decrement": "Azalt",
     "footer.greeting": "Salam, Altbilgi!",
     "footer.change": "Mətni Dəyiş",
     "footer.updated": "Altbilgi Yeniləndi!",

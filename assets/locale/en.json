@@ -2,6 +2,7 @@
     "header.title": "Header Component",
     "header.count": "Count",
     "header.increment": "Increment",
+    "header.decrement": "Decrement",
     "footer.greeting": "Hello, Footer!",
     "footer.change": "Change Text",
     "footer.updated": "Footer Updated!",
