@@ -1,21 +1,30 @@
-// Global store
-const useGlobalStore = createStore((set, get) => ({
-  state: {
-    count: 0,
-    message: "Welcome to Contact"
-  },
-  actions: {
-    increment: () => set({ count: get().count + 1 }),
-    decrement: () => set({ count: get().count - 1 }),
-    updateMessage: (message) => set({ message })
-  }
-}));
+// Global store with middleware
+const useGlobalStore = createStore(
+  (set, get) => ({
+    state: {
+      count: 0,
+      message: "Welcome to Contact"
+    },
+    actions: {
+      increment: () => set({ count: get().count + 1 }),
+      decrement: () => set({ count: get().count - 1 }),
+      updateMessage: (message) => set({ message })
+    }
+  }),
+  [noUIMiddlewares.loggerMiddleware, noUIMiddlewares.persistMiddleware]
+);
+
+// Initialization of state from localStorage, if exists
+const savedState = localStorage.getItem('noUIState');
+if (savedState) {
+  useGlobalStore.setState(JSON.parse(savedState));
+}
 
 const HeaderComponent = {
   render(element) {
     const state = noUI.constructor.createState(0);
     const update = () => {
-      element.innerHTML = /*html*/`
+      element.innerHTML = `
         <div>
           <h1>${noUI.t("header.title")}</h1>
           <p>${noUI.t("header.count")}: ${state.value}</p>
@@ -34,7 +43,7 @@ const FooterComponent = {
   render(element) {
     const state = noUI.constructor.createState(noUI.t("footer.greeting"));
     const update = () => {
-      element.innerHTML = /*html*/`
+      element.innerHTML = `
         <div>
           <footer>${state.value}</footer>
           <button id="change-text-btn">${noUI.t("footer.change")}</button>
@@ -50,7 +59,7 @@ const FooterComponent = {
 
 const LanguageSwitcherComponent = {
   render(element) {
-    element.innerHTML = /*html*/`
+    element.innerHTML = `
       <div>
         <button id="lang-en">English</button>
         <button id="lang-az">Azərbaycan</button>
@@ -64,7 +73,7 @@ const LanguageSwitcherComponent = {
 
 const HomeComponent = {
   render(element) {
-    element.innerHTML = /*html*/`
+    element.innerHTML = `
       <no-lang-switcher></no-lang-switcher>
       <no-header></no-header>
       <div>
@@ -79,7 +88,7 @@ const HomeComponent = {
 
 const AboutComponent = {
   render(element) {
-    element.innerHTML = /*html*/`
+    element.innerHTML = `
       <no-lang-switcher></no-lang-switcher>
       <no-header></no-header>
       <div>
@@ -96,7 +105,7 @@ const ContactComponent = {
   render(element) {
     const update = () => {
       const { count, message } = useGlobalStore.getState();
-      element.innerHTML = /*html*/`
+      element.innerHTML = `
         <no-lang-switcher></no-lang-switcher>
         <no-header></no-header>
         <div>
@@ -125,7 +134,7 @@ noUI.registerComponent("no-header", HeaderComponent);
 noUI.registerComponent("no-footer", FooterComponent);
 noUI.registerComponent("no-lang-switcher", LanguageSwitcherComponent);
 
-// Path-based page rendering
+// Page rendering
 function renderPage() {
   const path = window.location.pathname;
   const routes = {
@@ -137,5 +146,4 @@ function renderPage() {
   noUI.renderPage(path, component);
 }
 
-// Calling rendering
 renderPage();

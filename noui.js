@@ -81,7 +81,6 @@ class NoUI {
     });
   }
 
-  // Path-based page rendering
   renderPage(path, component) {
     const main = document.querySelector("#app");
     if (main) {
@@ -108,14 +107,36 @@ class NoUI {
   }
 }
 
-// A global state manager inspired by Zustand
-function createStore(createState) {
+// Global state manager with middleware support
+function createStore(createState, middlewares = []) {
   let state = {};
   const listeners = new Set();
 
+  // Wrapping setState in the middleware chain
   const setState = (partial) => {
     const nextState = typeof partial === 'function' ? partial(state) : partial;
-    state = { ...state, ...nextState };
+    const newState = { ...state, ...nextState };
+    
+    // Applying middleware
+    let currentState = state;
+    let update = nextState;
+    
+    middlewares.forEach((middleware) => {
+      const result = middleware({
+        getState: () => currentState,
+        setState: (next) => {
+          update = typeof next === 'function' ? next(currentState) : next;
+          currentState = { ...currentState, ...update };
+        },
+        nextState: update
+      });
+      if (result) {
+        update = result;
+        currentState = { ...currentState, ...update };
+      }
+    });
+
+    state = { ...state, ...update };
     listeners.forEach((listener) => listener(state));
   };
 
@@ -137,6 +158,20 @@ function createStore(createState) {
   };
 }
 
+// Examples of middleware
+function loggerMiddleware({ getState, nextState }) {
+  // console.log('Previous state:', getState());
+  // console.log('Next state:', nextState);
+  return nextState;
+}
+
+function persistMiddleware({ getState, nextState }, storageKey = 'noUIState') {
+  const newState = { ...getState(), ...nextState };
+  localStorage.setItem(storageKey, JSON.stringify(newState));
+  return nextState;
+}
+
 // Global variables
 window.noUI = new NoUI();
 window.createStore = createStore;
+window.noUIMiddlewares = { loggerMiddleware, persistMiddleware };
