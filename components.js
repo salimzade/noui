@@ -137,5 +137,5 @@ function renderPage() {
   noUI.renderPage(path, component);
 }
 
-// Вызов рендеринга
+// Calling rendering
 renderPage();
