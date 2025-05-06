@@ -1,4 +1,4 @@
-// Глобальный store
+// Global store
 const useGlobalStore = createStore((set, get) => ({
   state: {
     count: 0,
