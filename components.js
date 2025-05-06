@@ -14,12 +14,13 @@ const useGlobalStore = createStore(
   [noUIMiddlewares.loggerMiddleware, noUIMiddlewares.persistMiddleware]
 );
 
-// Initialization of state from localStorage, if exists
+// Initialize state from localStorage if available
 const savedState = localStorage.getItem('noUIState');
 if (savedState) {
   useGlobalStore.setState(JSON.parse(savedState));
 }
 
+// Header component with local state
 const HeaderComponent = {
   render(element) {
     const state = noUI.constructor.createState(0);
@@ -39,6 +40,7 @@ const HeaderComponent = {
   }
 };
 
+// Footer component with local state
 const FooterComponent = {
   render(element) {
     const state = noUI.constructor.createState(noUI.t("footer.greeting"));
@@ -57,6 +59,7 @@ const FooterComponent = {
   }
 };
 
+// Language switcher component
 const LanguageSwitcherComponent = {
   render(element) {
     element.innerHTML = `
@@ -71,6 +74,7 @@ const LanguageSwitcherComponent = {
   }
 };
 
+// Home page component
 const HomeComponent = {
   render(element) {
     element.innerHTML = `
@@ -86,6 +90,7 @@ const HomeComponent = {
   }
 };
 
+// About page component
 const AboutComponent = {
   render(element) {
     element.innerHTML = `
@@ -101,6 +106,7 @@ const AboutComponent = {
   }
 };
 
+// Contact page component with global state
 const ContactComponent = {
   render(element) {
     const update = () => {
@@ -129,12 +135,12 @@ const ContactComponent = {
   }
 };
 
-// Component registration
+// Register components
 noUI.registerComponent("no-header", HeaderComponent);
 noUI.registerComponent("no-footer", FooterComponent);
 noUI.registerComponent("no-lang-switcher", LanguageSwitcherComponent);
 
-// Page rendering
+// Render page based on current route
 function renderPage() {
   const path = window.location.pathname;
   const routes = {

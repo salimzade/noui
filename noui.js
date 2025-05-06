@@ -1,33 +1,53 @@
 class NoUI {
-  constructor() {
+  constructor(config = {}) {
+    // Initialize component storage
     this.components = new Map();
+    // Initialize translation storage
     this.translations = new Map();
-    this.currentLang = localStorage.getItem("language") || "en";
+    // Set current language from localStorage or config
+    this.currentLang = localStorage.getItem("language") || config.defaultLang || "en";
+    // Store translation change subscribers
     this.translationSubscribers = new Set();
+    // Initialize MutationObserver for DOM changes
     this.observer = new MutationObserver(this.handleMutations.bind(this));
+    // Store configuration for translations
+    this.config = {
+      langs: config.langs || [],
+      localePath: config.localePath || "assets/locale",
+      defaultLang: config.defaultLang || "en"
+    };
+    // Run initialization
     this.init();
   }
 
   async init() {
-    await this.loadTranslations(["en", "az", "ru"]);
+    // Load translations if languages are specified
+    if (this.config.langs.length) {
+      await this.loadTranslations(this.config.langs, this.config.localePath);
+    }
+    // Observe DOM changes
     this.observer.observe(document.body, { childList: true, subtree: true });
+    // Scan for components
     this.scanComponents();
   }
 
-  async loadTranslations(langs) {
+  async loadTranslations(langs, localePath) {
+    // Load translation files for each language
     for (const lang of langs) {
       try {
-        const response = await fetch(`assets/locale/${lang}.json`);
+        const response = await fetch(`${localePath}/${lang}.json`);
         const data = await response.json();
         this.translations.set(lang, data);
       } catch (error) {
-        console.error(`Ошибка загрузки перевода для ${lang}:`, error);
+        console.error(`Error loading translation for ${lang}:`, error);
       }
     }
+    // Notify subscribers of translation changes
     this.notifyTranslationSubscribers();
   }
 
   setLanguage(lang) {
+    // Set language if it exists in translations
     if (this.translations.has(lang)) {
       this.currentLang = lang;
       localStorage.setItem("language", lang);
@@ -36,20 +56,24 @@ class NoUI {
   }
 
   t(key) {
+    // Get translation for the current language
     const translations = this.translations.get(this.currentLang) || {};
     return translations[key] || key;
   }
 
   subscribeToLanguageChange(callback) {
+    // Subscribe to language changes
     this.translationSubscribers.add(callback);
     return () => this.translationSubscribers.delete(callback);
   }
 
   notifyTranslationSubscribers() {
+    // Notify all language change subscribers
     this.translationSubscribers.forEach((callback) => callback(this.currentLang));
   }
 
   registerComponent(name, component) {
+    // Register a Web Component
     this.components.set(name.toLowerCase(), component);
     customElements.define(
       name.toLowerCase(),
@@ -62,6 +86,7 @@ class NoUI {
   }
 
   scanComponents() {
+    // Scan DOM for registered components and render them
     this.components.forEach((component, name) => {
       const elements = document.querySelectorAll(name);
       elements.forEach((el) => {
@@ -74,6 +99,7 @@ class NoUI {
   }
 
   handleMutations(mutations) {
+    // Handle DOM mutations to scan for new components
     mutations.forEach((mutation) => {
       if (mutation.addedNodes.length) {
         this.scanComponents();
@@ -82,6 +108,7 @@ class NoUI {
   }
 
   renderPage(path, component) {
+    // Render a page component into #app
     const main = document.querySelector("#app");
     if (main) {
       main.innerHTML = "";
@@ -91,6 +118,7 @@ class NoUI {
   }
 
   static createState(initialValue) {
+    // Create a local reactive state
     let value = initialValue;
     const listeners = new Set();
     return {
@@ -112,12 +140,11 @@ function createStore(createState, middlewares = []) {
   let state = {};
   const listeners = new Set();
 
-  // Wrapping setState in the middleware chain
+  // Wrap setState with middleware chain
   const setState = (partial) => {
     const nextState = typeof partial === 'function' ? partial(state) : partial;
     const newState = { ...state, ...nextState };
     
-    // Applying middleware
     let currentState = state;
     let update = nextState;
     
@@ -158,13 +185,14 @@ function createStore(createState, middlewares = []) {
   };
 }
 
-// Examples of middleware
+// Middleware to log state changes
 function loggerMiddleware({ getState, nextState }) {
-  // console.log('Previous state:', getState());
-  // console.log('Next state:', nextState);
+  console.log('Previous state:', getState());
+  console.log('Next state:', nextState);
   return nextState;
 }
 
+// Middleware to persist state to localStorage
 function persistMiddleware({ getState, nextState }, storageKey = 'noUIState') {
   const newState = { ...getState(), ...nextState };
   localStorage.setItem(storageKey, JSON.stringify(newState));
@@ -172,6 +200,6 @@ function persistMiddleware({ getState, nextState }, storageKey = 'noUIState') {
 }
 
 // Global variables
-window.noUI = new NoUI();
+window.noUI = null; // Will be initialized in HTML
 window.createStore = createStore;
 window.noUIMiddlewares = { loggerMiddleware, persistMiddleware };
