@@ -10,7 +10,7 @@
 - **Internationalization (i18n)**: Multi-language support with JSON-based translations.
 - **Dual state management**:
   - `createState`: Local, reactive state for simple, isolated components.
-  - `createStore`: Global, centralized state with actions, inspired by Zustand.
+  - `createStore`: Global, centralized state with actions and middleware support, inspired by Zustand.
 - **No build required**: Pure JavaScript, works with `<script>` tags.
 - **Readable code**: Full, descriptive variable and method names (e.g., `registerComponent`, `translations`).
 
@@ -71,19 +71,21 @@ Get started with `NoUI` in 5 minutes.
 4. **Open in browser**:
    - Visit `http://localhost:8000/`.
    - Navigate to `/about` and `/contact`.
-   - Test features: click buttons, switch languages (English, Azerbaijani, Russian).
+   - Test features: click buttons, switch languages (English, Azerbaijani, Russian), check global state persistence in `localStorage`.
 
 5. **Verify**:
    - Home page (`/`): Shows "Welcome to Home".
    - About page (`/about`): Shows "About Us".
-   - Contact page (`/contact`): Shows global state (count, message).
+   - Contact page (`/contact`): Shows global state (count, message) with middleware logging and persistence.
    - Refresh any page → No `Cannot GET` errors.
    - Language switcher: Changes text across pages.
+   - Console: Logs state changes (via `loggerMiddleware`).
+   - `localStorage`: Stores global state (via `persistMiddleware`).
 
 ## Setup
 
 ### Project Structure
-- `noui.js`: Core framework (class `NoUI`, `createState`, `createStore`).
+- `noui.js`: Core framework (class `NoUI`, `createState`, `createStore`, middleware).
 - `components.js`: Web Components and page logic.
 - `index.html`, `about.html`, `contact.html`: HTML files for each route.
 - `assets/locale/*.json`: Translation files (`en.json`, `az.json`, `ru.json`).
@@ -294,7 +296,7 @@ noUI.registerComponent("no-counter", CounterComponent);
 
 ## State Management
 
-`NoUI` offers two state management solutions: `createState` (local, reactive) and `createStore` (global, centralized, inspired by Zustand).
+`NoUI` offers two state management solutions: `createState` (local, reactive) and `createStore` (global, centralized, with middleware support).
 
 ### Local State: `createState`
 - **Purpose**: Simple, isolated state for individual components.
@@ -327,25 +329,28 @@ noUI.registerComponent("no-counter", CounterComponent);
   ```
 
 ### Global State: `createStore`
-- **Purpose**: Centralized state for sharing data across components, with actions.
+- **Purpose**: Centralized state for sharing data across components, with actions and middleware.
 - **API**:
-  - `createStore(createState)`: Creates a store with state and actions.
+  - `createStore(createState, middlewares = [])`: Creates a store with state, actions, and optional middleware.
   - `store.getState()`: Returns current state.
   - `store.setState(partial)`: Updates state (object or function).
   - `store.subscribe(listener)`: Subscribes to state changes.
   - `store.actionName()`: Calls an action (defined in `createState`).
 - **Example**:
   ```javascript
-  const useStore = createStore((set, get) => ({
-    state: { count: 0, text: "Hello" },
-    actions: {
-      increment: () => set({ count: get().count + 1 }),
-      updateText: (text) => set({ text })
-    }
-  }));
+  const useStore = createStore(
+    (set, get) => ({
+      state: { count: 0, text: "Hello" },
+      actions: {
+        increment: () => set({ count: get().count + 1 }),
+        updateText: (text) => set({ text })
+      }
+    }),
+    [noUIMiddlewares.loggerMiddleware]
+  );
   useStore.subscribe((state) => console.log(state));
-  useStore.increment(); // { count: 1, text: "Hello" }
-  useStore.updateText("Hi"); // { count: 1, text: "Hi" }
+  useStore.increment(); // Logs previous and next state, then: { count: 1, text: "Hello" }
+  useStore.updateText("Hi"); // Logs previous and next state, then: { count: 1, text: "Hi" }
   ```
 
 - **Use case**:
@@ -363,6 +368,45 @@ noUI.registerComponent("no-counter", CounterComponent);
       update();
     }
   };
+  ```
+
+### Middleware for `createStore`
+- **Purpose**: Intercept and modify state updates (e.g., logging, persistence, async handling).
+- **API**:
+  - Middleware is a function that receives `{ getState, setState, nextState }` and returns `nextState` or nothing.
+  - Passed as an array to `createStore(createState, middlewares)`.
+- **Built-in Middleware**:
+  - `noUIMiddlewares.loggerMiddleware`: Logs previous and next state to console.
+  - `noUIMiddlewares.persistMiddleware`: Saves state to `localStorage` (default key: `noUIState`).
+- **Example**:
+  ```javascript
+  const useStore = createStore(
+    (set, get) => ({
+      state: { count: 0 },
+      actions: { increment: () => set({ count: get().count + 1 }) }
+    }),
+    [noUIMiddlewares.loggerMiddleware, noUIMiddlewares.persistMiddleware]
+  );
+  // Logs state changes and saves to localStorage
+  useStore.increment();
+  ```
+
+- **Custom Middleware**:
+  ```javascript
+  const asyncMiddleware = ({ getState, setState, nextState }) => {
+    if (nextState.asyncAction) {
+      fetch('/api/data').then((data) => setState({ data }));
+      return null; // Prevent immediate state update
+    }
+    return nextState;
+  };
+  const useStore = createStore(
+    (set, get) => ({
+      state: { data: null },
+      actions: { fetchData: () => set({ asyncAction: true }) }
+    }),
+    [asyncMiddleware]
+  );
   ```
 
 ## Routing
@@ -416,8 +460,13 @@ See "Setup" section for Python, Apache, Nginx, or Express configurations.
 - See "State Management" for details.
 
 ### Function: `createStore`
-- `createStore(createState)`: Creates a global state store.
+- `createStore(createState, middlewares = [])`: Creates a global state store with optional middleware.
 - See "State Management" for details.
+
+### Middleware
+- `noUIMiddlewares.loggerMiddleware`: Logs state changes.
+- `noUIMiddlewares.persistMiddleware`: Persists state to `localStorage`.
+- See "Middleware for `createStore`" for details.
 
 ## Advanced Techniques
 
@@ -438,12 +487,15 @@ Add `fr.json` to `assets/locale/`:
 ### Global State Across Pages
 Share `useGlobalStore` across all pages:
 ```javascript
-const useGlobalStore = createStore((set, get) => ({
-  state: { theme: "light" },
-  actions: {
-    toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" })
-  }
-}));
+const useGlobalStore = createStore(
+  (set, get) => ({
+    state: { theme: "light" },
+    actions: {
+      toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" })
+    }
+  }),
+  [noUIMiddlewares.persistMiddleware]
+);
 ```
 Use in a component:
 ```javascript
@@ -481,25 +533,23 @@ const CounterComponent = {
 };
 ```
 
-### Middleware for `createStore`
-Add logging to `createStore`:
+### Custom Middleware
+Create a middleware for async actions:
 ```javascript
-function createStoreWithMiddleware(createState) {
-  const store = createStore((set, get) => {
-    const originalSet = set;
-    const setWithLog = (partial) => {
-      console.log("State update:", partial);
-      originalSet(partial);
-    };
-    return createState(setWithLog, get);
-  });
-  return store;
-}
-
-const useStore = createStoreWithMiddleware((set, get) => ({
-  state: { count: 0 },
-  actions: { increment: () => set({ count: get().count + 1 }) }
-}));
+const asyncMiddleware = ({ getState, setState, nextState }) => {
+  if (nextState.asyncAction) {
+    fetch('/api/data').then((response) => response.json()).then((data) => setState({ data }));
+    return null;
+  }
+  return nextState;
+};
+const useStore = createStore(
+  (set, get) => ({
+    state: { data: null },
+    actions: { fetchData: () => set({ asyncAction: true }) }
+  }),
+  [asyncMiddleware]
+);
 ```
 
 ## Best Practices
@@ -526,6 +576,7 @@ const useStore = createStoreWithMiddleware((set, get) => ({
     setUserData: (user) => set({ user })
   }
   ```
+- Use middleware for cross-cutting concerns (logging, persistence).
 
 ### Performance
 - Minimize DOM updates by checking state changes (see "Optimizing Component Rendering").
@@ -547,7 +598,6 @@ const useStore = createStoreWithMiddleware((set, get) => ({
   }
   ```
   Access: `noUI.t("home.title")`.
-
 - Split `components.js` into multiple files if it становится большим (requires a build tool).
 
 ### Error Handling
@@ -581,14 +631,17 @@ const CounterComponent = {
 noUI.registerComponent("no-counter", CounterComponent);
 ```
 
-### Theme Toggle with `createStore`
+### Theme Toggle with `createStore` and Middleware
 ```javascript
-const useThemeStore = createStore((set, get) => ({
-  state: { theme: "light" },
-  actions: {
-    toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" })
-  }
-}));
+const useThemeStore = createStore(
+  (set, get) => ({
+    state: { theme: "light" },
+    actions: {
+      toggleTheme: () => set({ theme: get().theme === "light" ? "dark" : "light" })
+    }
+  }),
+  [noUIMiddlewares.loggerMiddleware, noUIMiddlewares.persistMiddleware]
+);
 
 const ThemeComponent = {
   render(element) {
@@ -609,6 +662,24 @@ noUI.registerComponent("no-theme", ThemeComponent);
 ### New Page
 See "Creating Pages" section.
 
+### Async Middleware
+```javascript
+const asyncMiddleware = ({ getState, setState, nextState }) => {
+  if (nextState.asyncAction) {
+    fetch('/api/data').then((response) => response.json()).then((data) => setState({ data }));
+    return null;
+  }
+  return nextState;
+};
+const useStore = createStore(
+  (set, get) => ({
+    state: { data: null },
+    actions: { fetchData: () => set({ asyncAction: true }) }
+  }),
+  [asyncMiddleware]
+);
+```
+
 ## Troubleshooting
 
 - **Page not found (`Cannot GET /contact`)**:
@@ -621,6 +692,9 @@ See "Creating Pages" section.
   - Verify `<div id="app">` in HTML.
   - Check console for errors (e.g., `customElements.define`).
   - Ensure Web Components polyfill is loaded.
+- **State not persisting**:
+  - Check `localStorage` for `noUIState`.
+  - Ensure `persistMiddleware` is included in `createStore`.
 
 ## Contributing
 - Report issues or suggest features via the project repository.
@@ -631,4 +705,4 @@ See "Creating Pages" section.
 Teymur Salimzade
 
 ## License
-MIT License. Use & modify `NoUI` freely in your projects.
+MIT License. Use `NoUI` freely in your projects.
