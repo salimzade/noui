@@ -81,7 +81,7 @@ class NoUI {
     });
   }
 
-  // Рендеринг страницы на основе пути
+  // Path-based page rendering
   renderPage(path, component) {
     const main = document.querySelector("#app");
     if (main) {
@@ -108,7 +108,7 @@ class NoUI {
   }
 }
 
-// Глобальный state manager, вдохновлённый Zustand
+// A global state manager inspired by Zustand
 function createStore(createState) {
   let state = {};
   const listeners = new Set();
@@ -137,6 +137,6 @@ function createStore(createState) {
   };
 }
 
-// Глобальные переменные
+// Global variables
 window.noUI = new NoUI();
 window.createStore = createStore;

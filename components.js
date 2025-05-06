@@ -120,12 +120,12 @@ const ContactComponent = {
   }
 };
 
-// Регистрация компонентов
+// Component registration
 noUI.registerComponent("no-header", HeaderComponent);
 noUI.registerComponent("no-footer", FooterComponent);
 noUI.registerComponent("no-lang-switcher", LanguageSwitcherComponent);
 
-// Рендеринг страницы на основе пути
+// Path-based page rendering
 function renderPage() {
   const path = window.location.pathname;
   const routes = {
