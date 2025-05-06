@@ -7,12 +7,13 @@
 ### Key Features
 - **Server-side routing**: Clean URLs (`/`, `/about`, `/contact`) without `.html`, no `Cannot GET` errors on refresh.
 - **Web Components**: Reusable, encapsulated UI components.
-- **Internationalization (i18n)**: Multi-language support with JSON-based translations.
+- **Internationalization (i18n)**: Multi-language support with configurable JSON-based translations.
 - **Dual state management**:
   - `createState`: Local, reactive state for simple, isolated components.
   - `createStore`: Global, centralized state with actions and middleware support, inspired by Zustand.
 - **No build required**: Pure JavaScript, works with `<script>` tags.
 - **Readable code**: Full, descriptive variable and method names (e.g., `registerComponent`, `translations`).
+- **English comments**: All code comments are in English for international accessibility.
 
 ## Quick Start
 
@@ -41,6 +42,17 @@ Get started with `NoUI` in 5 minutes.
 
 2. **Download files**:
    - Copy `noui.js`, `components.js`, `index.html`, `about.html`, `contact.html`, and `assets/locale/*.json` from the provided code (see project repository or code snippets).
+   - Configure translations in each HTML file (e.g., `index.html`):
+     ```html
+     <script>
+       // Initialize NoUI with translation configuration
+       window.noUI = new NoUI({
+         langs: ["en", "az", "ru"],
+         localePath: "assets/locale",
+         defaultLang: "en"
+       });
+     </script>
+     ```
    - Create `server.py` for local testing:
      ```python
      import http.server
@@ -71,7 +83,7 @@ Get started with `NoUI` in 5 minutes.
 4. **Open in browser**:
    - Visit `http://localhost:8000/`.
    - Navigate to `/about` and `/contact`.
-   - Test features: click buttons, switch languages (English, Azerbaijani, Russian), check global state persistence in `localStorage`.
+   - Test features: click buttons, switch languages, check global state persistence in `localStorage`.
 
 5. **Verify**:
    - Home page (`/`): Shows "Welcome to Home".
@@ -87,9 +99,28 @@ Get started with `NoUI` in 5 minutes.
 ### Project Structure
 - `noui.js`: Core framework (class `NoUI`, `createState`, `createStore`, middleware).
 - `components.js`: Web Components and page logic.
-- `index.html`, `about.html`, `contact.html`: HTML files for each route.
+- `index.html`, `about.html`, `contact.html`: HTML files for each route, with translation configuration.
 - `assets/locale/*.json`: Translation files (`en.json`, `az.json`, `ru.json`).
 - `server.py`: Optional Python server for local testing.
+
+### Translation Configuration
+Configure translations in each HTML file via `<script>` before loading `components.js`:
+```html
+<script src="noui.js"></script>
+<script>
+  // Initialize NoUI with translation configuration
+  window.noUI = new NoUI({
+    langs: ["en", "az", "ru"], // List of languages
+    localePath: "assets/locale", // Path to translation files
+    defaultLang: "en" // Default language
+  });
+</script>
+<script src="components.js"></script>
+```
+
+- `langs`: Array of language codes (e.g., `["en", "fr"]`).
+- `localePath`: Directory or URL for `.json` files (e.g., `assets/locale/en.json`).
+- `defaultLang`: Fallback language if none saved in `localStorage`.
 
 ### Server Configuration
 To support clean URLs (`/about` instead of `/about.html`), configure your server:
@@ -167,6 +198,14 @@ Each page in `NoUI` corresponds to an HTML file (`index.html`, `about.html`, etc
    <body>
      <div id="app"></div>
      <script src="noui.js"></script>
+     <script>
+       // Initialize NoUI with translation configuration
+       window.noUI = new NoUI({
+         langs: ["en", "az", "ru"],
+         localePath: "assets/locale",
+         defaultLang: "en"
+       });
+     </script>
      <script src="components.js"></script>
    </body>
    </html>
@@ -174,6 +213,7 @@ Each page in `NoUI` corresponds to an HTML file (`index.html`, `about.html`, etc
 
 2. **Add component** in `components.js`:
    ```javascript
+   // Blog page component
    const BlogComponent = {
      render(element) {
        element.innerHTML = `
@@ -191,6 +231,7 @@ Each page in `NoUI` corresponds to an HTML file (`index.html`, `about.html`, etc
 
 3. **Update routes** in `components.js` (in `renderPage`):
    ```javascript
+   // Route configuration
    const routes = {
      "/": HomeComponent,
      "/about": AboutComponent,
@@ -229,6 +270,7 @@ Each page in `NoUI` corresponds to an HTML file (`index.html`, `about.html`, etc
 ### Adding a New Component
 1. **Define component** in `components.js`:
    ```javascript
+   // Sidebar component
    const SidebarComponent = {
      render(element) {
        element.innerHTML = `
@@ -242,11 +284,13 @@ Each page in `NoUI` corresponds to an HTML file (`index.html`, `about.html`, etc
 
 2. **Register component**:
    ```javascript
+   // Register Sidebar component
    noUI.registerComponent("no-sidebar", SidebarComponent);
    ```
 
 3. **Use in pages** (e.g., in `HomeComponent`):
    ```javascript
+   // Home page component
    const HomeComponent = {
      render(element) {
        element.innerHTML = `
@@ -276,6 +320,7 @@ Each page in `NoUI` corresponds to an HTML file (`index.html`, `about.html`, etc
 ### Component with State
 Use `createState` for local state:
 ```javascript
+// Counter component with local state
 const CounterComponent = {
   render(element) {
     const state = noUI.constructor.createState(0);
@@ -291,6 +336,7 @@ const CounterComponent = {
     update();
   }
 };
+// Register Counter component
 noUI.registerComponent("no-counter", CounterComponent);
 ```
 
@@ -306,6 +352,7 @@ noUI.registerComponent("no-counter", CounterComponent);
   - `state.subscribe(listener)`: Subscribe to changes.
 - **Example**:
   ```javascript
+  // Create a reactive state
   const state = noUI.constructor.createState(0);
   state.subscribe((value) => console.log(`Count: ${value}`));
   state.value = 1; // Logs: Count: 1
@@ -313,6 +360,7 @@ noUI.registerComponent("no-counter", CounterComponent);
 
 - **Use case**:
   ```javascript
+  // Header component with local state
   const HeaderComponent = {
     render(element) {
       const state = noUI.constructor.createState(0);
@@ -338,6 +386,7 @@ noUI.registerComponent("no-counter", CounterComponent);
   - `store.actionName()`: Calls an action (defined in `createState`).
 - **Example**:
   ```javascript
+  // Create a global store with middleware
   const useStore = createStore(
     (set, get) => ({
       state: { count: 0, text: "Hello" },
@@ -355,6 +404,7 @@ noUI.registerComponent("no-counter", CounterComponent);
 
 - **Use case**:
   ```javascript
+  // Contact component with global state
   const ContactComponent = {
     render(element) {
       const update = () => {
@@ -380,6 +430,7 @@ noUI.registerComponent("no-counter", CounterComponent);
   - `noUIMiddlewares.persistMiddleware`: Saves state to `localStorage` (default key: `noUIState`).
 - **Example**:
   ```javascript
+  // Create a store with logging and persistence
   const useStore = createStore(
     (set, get) => ({
       state: { count: 0 },
@@ -393,6 +444,7 @@ noUI.registerComponent("no-counter", CounterComponent);
 
 - **Custom Middleware**:
   ```javascript
+  // Middleware for async actions
   const asyncMiddleware = ({ getState, setState, nextState }) => {
     if (nextState.asyncAction) {
       fetch('/api/data').then((data) => setState({ data }));
@@ -400,6 +452,7 @@ noUI.registerComponent("no-counter", CounterComponent);
     }
     return nextState;
   };
+  // Create a store with async middleware
   const useStore = createStore(
     (set, get) => ({
       state: { data: null },
@@ -418,6 +471,7 @@ noUI.registerComponent("no-counter", CounterComponent);
 - Server maps URLs to files (e.g., `/about` → `about.html`).
 - `components.js` renders the appropriate component based on `location.pathname`:
   ```javascript
+  // Route configuration
   const routes = {
     "/": HomeComponent,
     "/about": AboutComponent,
@@ -435,14 +489,27 @@ See "Setup" section for Python, Apache, Nginx, or Express configurations.
 ## API Reference
 
 ### Class: `NoUI`
-- **Constructor**: `new NoUI()`
+- **Constructor**: `new NoUI(config)`
   - Initializes components, translations, and MutationObserver.
   - Stored in `window.noUI`.
+  - `config`:
+    - `langs`: Array of language codes (default: `[]`).
+    - `localePath`: Path to translation files (default: `assets/locale`).
+    - `defaultLang`: Default language (default: `en`).
+  - Example:
+    ```javascript
+    // Initialize NoUI with translation configuration
+    window.noUI = new NoUI({
+      langs: ["en", "fr"],
+      localePath: "assets/translations",
+      defaultLang: "en"
+    });
+    ```
 
 - **Methods**:
   - `init()`: Loads translations and sets up component scanning.
-  - `loadTranslations(langs)`: Loads JSON translation files for given languages.
-    - Example: `noUI.loadTranslations(["en", "fr"])`.
+  - `loadTranslations(langs, localePath)`: Loads JSON translation files.
+    - Example: `noUI.loadTranslations(["fr"], "assets/translations")`.
   - `setLanguage(lang)`: Sets the active language and saves to `localStorage`.
     - Example: `noUI.setLanguage("az")`.
   - `t(key)`: Returns translated string for the current language.
@@ -473,11 +540,12 @@ See "Setup" section for Python, Apache, Nginx, or Express configurations.
 ### Dynamic Translations
 Load additional languages dynamically:
 ```javascript
-noUI.loadTranslations(["fr"]).then(() => {
+// Load French translations dynamically
+noUI.loadTranslations(["fr"], "assets/translations").then(() => {
   noUI.setLanguage("fr");
 });
 ```
-Add `fr.json` to `assets/locale/`:
+Add `fr.json` to `assets/translations/`:
 ```json
 {
   "home.title": "Bienvenue"
@@ -487,6 +555,7 @@ Add `fr.json` to `assets/locale/`:
 ### Global State Across Pages
 Share `useGlobalStore` across all pages:
 ```javascript
+// Create a global store with persistence
 const useGlobalStore = createStore(
   (set, get) => ({
     state: { theme: "light" },
@@ -496,9 +565,7 @@ const useGlobalStore = createStore(
   }),
   [noUIMiddlewares.persistMiddleware]
 );
-```
-Use in a component:
-```javascript
+// Theme component using global state
 const ThemeComponent = {
   render(element) {
     const update = () => {
@@ -517,6 +584,7 @@ const ThemeComponent = {
 ### Optimizing Component Rendering
 Avoid redundant renders by checking state changes:
 ```javascript
+// Optimized counter component
 const CounterComponent = {
   render(element) {
     let lastValue = null;
@@ -536,6 +604,7 @@ const CounterComponent = {
 ### Custom Middleware
 Create a middleware for async actions:
 ```javascript
+// Middleware for async actions
 const asyncMiddleware = ({ getState, setState, nextState }) => {
   if (nextState.asyncAction) {
     fetch('/api/data').then((response) => response.json()).then((data) => setState({ data }));
@@ -543,6 +612,7 @@ const asyncMiddleware = ({ getState, setState, nextState }) => {
   }
   return nextState;
 };
+// Create a store with async middleware
 const useStore = createStore(
   (set, get) => ({
     state: { data: null },
@@ -550,6 +620,19 @@ const useStore = createStore(
   }),
   [asyncMiddleware]
 );
+```
+
+### Custom Translation Paths
+Use a CDN for translations:
+```html
+<script>
+  // Initialize NoUI with CDN translations
+  window.noUI = new NoUI({
+    langs: ["en", "fr"],
+    localePath: "https://cdn.example.com/translations",
+    defaultLang: "en"
+  });
+</script>
 ```
 
 ## Best Practices
@@ -571,6 +654,7 @@ const useStore = createStore(
 - Use `createStore` for shared state (e.g., user data, theme).
 - Define clear action names in `createStore`:
   ```javascript
+  // Define clear actions
   actions: {
     incrementCount: () => set({ count: get().count + 1 }),
     setUserData: (user) => set({ user })
@@ -583,6 +667,7 @@ const useStore = createStore(
 - Use `noUI.scanComponents()` only when necessary (automatically called in `renderPage`).
 - Cache translation lookups:
   ```javascript
+  // Cache translation function
   const t = noUI.t.bind(noUI);
   const title = t("home.title");
   ```
@@ -598,15 +683,17 @@ const useStore = createStore(
   }
   ```
   Access: `noUI.t("home.title")`.
-- Split `components.js` into multiple files if it становится большим (requires a build tool).
+- Split `components.js` into multiple files if it grows large (requires a build tool).
 
 ### Error Handling
 - Handle translation errors:
   ```javascript
-  noUI.loadTranslations(["en"]).catch(() => console.error("Failed to load translations"));
+  // Handle translation loading errors
+  noUI.loadTranslations(["en"], "assets/locale").catch(() => console.error("Failed to load translations"));
   ```
 - Check for missing `#app`:
   ```javascript
+  // Verify #app element exists
   const main = document.querySelector("#app");
   if (!main) throw new Error("No #app element found");
   ```
@@ -615,6 +702,7 @@ const useStore = createStore(
 
 ### Counter Component with `createState`
 ```javascript
+// Counter component with local state
 const CounterComponent = {
   render(element) {
     const state = noUI.constructor.createState(0);
@@ -628,11 +716,13 @@ const CounterComponent = {
     update();
   }
 };
+// Register Counter component
 noUI.registerComponent("no-counter", CounterComponent);
 ```
 
 ### Theme Toggle with `createStore` and Middleware
 ```javascript
+// Create a global store with middleware
 const useThemeStore = createStore(
   (set, get) => ({
     state: { theme: "light" },
@@ -642,7 +732,7 @@ const useThemeStore = createStore(
   }),
   [noUIMiddlewares.loggerMiddleware, noUIMiddlewares.persistMiddleware]
 );
-
+// Theme component using global state
 const ThemeComponent = {
   render(element) {
     const update = () => {
@@ -656,6 +746,7 @@ const ThemeComponent = {
     update();
   }
 };
+// Register Theme component
 noUI.registerComponent("no-theme", ThemeComponent);
 ```
 
@@ -664,6 +755,7 @@ See "Creating Pages" section.
 
 ### Async Middleware
 ```javascript
+// Middleware for async actions
 const asyncMiddleware = ({ getState, setState, nextState }) => {
   if (nextState.asyncAction) {
     fetch('/api/data').then((response) => response.json()).then((data) => setState({ data }));
@@ -671,6 +763,7 @@ const asyncMiddleware = ({ getState, setState, nextState }) => {
   }
   return nextState;
 };
+// Create a store with async middleware
 const useStore = createStore(
   (set, get) => ({
     state: { data: null },
@@ -686,7 +779,8 @@ const useStore = createStore(
   - Ensure server is configured (e.g., `server.py` or `.htaccess`).
   - Verify HTML files exist (`contact.html`).
 - **Translations not loading**:
-  - Check `assets/locale/*.json` files.
+  - Check `localePath` and `langs` in HTML configuration.
+  - Verify `.json` files exist in `localePath`.
   - Use an HTTP server (not `file://`) to avoid CORS issues.
 - **Components not rendering**:
   - Verify `<div id="app">` in HTML.
@@ -699,10 +793,8 @@ const useStore = createStore(
 ## Contributing
 - Report issues or suggest features via the project repository.
 - Keep code readable with full variable names.
+- Use English for all comments and documentation.
 - Avoid build tools to maintain simplicity.
-
-## Author
-Teymur Salimzade
 
 ## License
 MIT License. Use `NoUI` freely in your projects.
