@@ -79,7 +79,8 @@ class NoUI {
       name.toLowerCase(),
       class extends HTMLElement {
         connectedCallback() {
-          component.render(this);
+          const shadow = this.attachShadow({ mode: "open" });
+          component.render(shadow);
         }
       }
     );
@@ -124,8 +125,10 @@ class NoUI {
     return {
       get value() { return value; },
       set value(newValue) {
-        value = newValue;
-        listeners.forEach((listener) => listener(value));
+        if (newValue !== value) {
+          value = newValue;
+          listeners.forEach((listener) => listener(value));
+        }
       },
       subscribe(listener) {
         listeners.add(listener);
@@ -187,8 +190,8 @@ function createStore(createState, middlewares = []) {
 
 // Middleware to log state changes
 function loggerMiddleware({ getState, nextState }) {
-  console.log('Previous state:', getState());
-  console.log('Next state:', nextState);
+  // console.log('Previous state:', getState());
+  // console.log('Next state:', nextState);
   return nextState;
 }
 
