@@ -79,8 +79,7 @@ class NoUI {
       name.toLowerCase(),
       class extends HTMLElement {
         connectedCallback() {
-          const shadow = this.attachShadow({ mode: "open" });
-          component.render(shadow);
+          component.render(this);
         }
       }
     );
